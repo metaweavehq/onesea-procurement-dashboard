@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import { testConnection } from './db.js';
 import vesselsRoutes from './routes/vessels.js';
 import fleetRoutes from './routes/fleet.js';
 import pipelineRoutes from './routes/pipeline.js';
@@ -9,8 +11,11 @@ import requisitionsRoutes from './routes/requisitions.js';
 import rfqRoutes from './routes/rfq.js';
 import purchaseOrdersRoutes from './routes/purchase-orders.js';
 
+// Load environment variables
+dotenv.config();
+
 const app = express();
-const PORT = 5007;
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
@@ -37,8 +42,17 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message || 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Procurement Dashboard API running on http://localhost:${PORT}`);
+app.listen(PORT, async () => {
+  console.log(`\nProcurement Dashboard API running on http://localhost:${PORT}`);
+
+  // Test database connection
+  const connected = await testConnection();
+  if (!connected) {
+    console.error('\n⚠️  Warning: Could not connect to database. Check your .env configuration.');
+    console.log('For local MySQL: Set DB_PORT=3306 and DB_PASSWORD= in .env');
+    console.log('For Cloud SQL: Ensure proxy is running on port 3308');
+  }
+
   console.log('\nAvailable endpoints:');
   console.log('  GET /api/health - Health check');
   console.log('  GET /api/vessels - List all vessels');

@@ -58,6 +58,7 @@ This dashboard provides real-time procurement analytics for ship management oper
 | Express | 4.18.2 | Node.js web framework |
 | MySQL2 | 3.6.5 | MySQL database driver |
 | CORS | 2.8.5 | Cross-origin resource sharing |
+| dotenv | 16.3.1 | Environment variable management |
 
 ### Dev Dependencies
 | Package | Version | Purpose |
@@ -213,19 +214,58 @@ npm run preview
 
 ## Database Configuration
 
-The database connection is configured in `server/db.js`:
+The database connection supports both **Local MySQL** and **Cloud SQL** via environment variables.
 
-```javascript
-const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'safenet',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+### Environment Variables
+
+Create a `.env` file in the project root (see `.env.example`):
+
+```bash
+# For LOCAL MySQL (development):
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=safenet
+
+# For CLOUD SQL via proxy (production):
+# Start proxy first: ./cloud-sql-proxy lifeosai-481608:asia-south1:safenet-mysql --port=3308
+DB_HOST=127.0.0.1
+DB_PORT=3308
+DB_USER=root
+DB_PASSWORD=safenet123
+DB_NAME=safenet
+
+# Server port
+PORT=5001
 ```
+
+### Quick Setup
+
+**Local MySQL:**
+```bash
+cp .env.example .env
+# Edit .env: Set DB_PORT=3306 and DB_PASSWORD=
+npm run dev:server
+```
+
+**Cloud SQL:**
+```bash
+# Terminal 1: Start the proxy
+./cloud-sql-proxy lifeosai-481608:asia-south1:safenet-mysql --port=3308
+
+# Terminal 2: Start the server (uses port 3308 by default if no .env)
+npm run dev:server
+```
+
+### Default Behavior
+
+Without a `.env` file, the server defaults to:
+- **Host:** 127.0.0.1
+- **Port:** 3308 (Cloud SQL proxy)
+- **User:** root
+- **Password:** safenet123
+- **Database:** safenet
 
 ### Database Tables Used
 | Table | Purpose |

@@ -1,15 +1,60 @@
 import mysql from 'mysql2/promise';
 
-// Create connection pool - Local MySQL
+// Load environment variables
+import dotenv from 'dotenv';
+dotenv.config();
+
+/**
+ * Database Connection Configuration
+ *
+ * Uses shared configuration pattern with support for:
+ * - Cloud SQL via proxy (port 3308) - default for production
+ * - Local MySQL (port 3306) - for development
+ *
+ * Environment Variables:
+ *   DB_HOST - Database host (default: 127.0.0.1)
+ *   DB_PORT - Database port (default: 3308 for Cloud SQL proxy, use 3306 for local)
+ *   DB_USER - Database user (default: root)
+ *   DB_PASSWORD - Database password (default: safenet123 for cloud, empty for local)
+ *   DB_NAME - Database name (default: safenet)
+ *
+ * For Local MySQL:
+ *   Set DB_PORT=3306 and DB_PASSWORD= in .env
+ *
+ * For Cloud SQL:
+ *   Start proxy: ./cloud-sql-proxy lifeosai-481608:asia-south1:safenet-mysql --port=3308
+ *   Use default settings (port 3308)
+ */
 const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'safenet',
+  host: process.env.DB_HOST || '127.0.0.1',
+  port: parseInt(process.env.DB_PORT) || 3308,
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : 'safenet123',
+  database: process.env.DB_NAME || 'safenet',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
 });
+
+/**
+ * Test the database connection
+ * @returns {Promise<boolean>} True if connection successful
+ */
+export async function testConnection() {
+  try {
+    const [rows] = await pool.query('SELECT 1 as test');
+    const config = {
+      host: process.env.DB_HOST || '127.0.0.1',
+      port: parseInt(process.env.DB_PORT) || 3308,
+      database: process.env.DB_NAME || 'safenet'
+    };
+    console.log(`Database connected successfully to ${config.host}:${config.port}/${config.database}`);
+    return true;
+  } catch (err) {
+    console.error('Database connection failed:', err.message);
+    return false;
+  }
+}
 
 /**
  * Currency conversion SQL helper
