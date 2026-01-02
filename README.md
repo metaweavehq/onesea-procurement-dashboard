@@ -192,7 +192,7 @@ npm run dev:all
 ```
 This starts:
 - Frontend: http://localhost:3007 (Vite dev server)
-- Backend: http://localhost:5007 (Express API)
+- Backend: http://localhost:5001 (Express API)
 
 ### Frontend Only
 ```bash
@@ -209,6 +209,24 @@ npm run dev:server
 npm run build
 npm run preview
 ```
+
+### Vite Proxy Configuration
+
+The frontend uses Vite's built-in proxy to forward API requests to the backend. This is configured in `vite.config.js`:
+
+```javascript
+server: {
+  port: 3007,
+  proxy: {
+    '/api': {
+      target: 'http://localhost:5001',
+      changeOrigin: true
+    }
+  }
+}
+```
+
+**Important:** The proxy target port (`5001`) must match the backend server port defined in `.env` (`PORT=5001`). If you change the backend port, update both files.
 
 ---
 
